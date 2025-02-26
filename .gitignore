@@ -58,9 +58,5 @@ htmlcov/
 .pytest_cache/
 
 # Static files
-static/
-static/uploads/
-static/uploads/images/
-!static/uploads/images/.gitkeep
 .env
 db.sqlite3
