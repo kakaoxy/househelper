@@ -1,0 +1,29 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "房产助手"
+			}
+		},
+		{
+			"path": "pages/calculator/index",
+			"style": {
+				"navigationBarTitleText": "房贷计算器"
+			}
+		},
+		{
+			"path": "pages/payment-detail/index",
+			"style": {
+			  "navigationBarTitleText": "还款明细"
+			}
+		  }
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "房产助手",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"uniIdRouter": {}
+}
