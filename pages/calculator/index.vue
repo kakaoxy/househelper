@@ -301,7 +301,7 @@
 				}
 
 				uni.navigateTo({
-					url: `/pages/payment-detail/index?data=${encodeURIComponent(JSON.stringify(navigationData))}`
+					url: `/pages/calculator/payment-detail/index?data=${encodeURIComponent(JSON.stringify(navigationData))}`
 				})
 			}
 		}

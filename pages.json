@@ -13,7 +13,7 @@
 			}
 		},
 		{
-			"path": "pages/payment-detail/index",
+			"path": "pages/calculator/payment-detail/index",
 			"style": {
 			  "navigationBarTitleText": "还款明细"
 			}
