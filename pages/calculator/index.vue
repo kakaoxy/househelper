@@ -149,15 +149,7 @@
 				this.showResult = false
 			},
 			calculate() {
-				console.log('开始计算，输入参数：', {
-					totalPrice: this.totalPrice,
-					downPaymentAmount: this.downPaymentAmount,
-					currentType: this.currentType,
-					selectedYear: this.loanYears[this.selectedYear],
-					commercialRate: this.commercialRate,
-					gjjRate: this.gjjRate,
-					commercialAmount: this.commercialAmount
-				})
+				
 
 				// 验证输入
 				if (!this.totalPrice) {
@@ -172,38 +164,33 @@
 				const downPaymentRate = this.downPaymentAmount ?
 					(this.downPaymentAmount / this.totalPrice) :
 					(parseFloat(this.downPaymentRatios[this.selectedDownPayment]) / 100)
-				console.log('首付比例：', downPaymentRate)
+
 
 				const totalLoan = this.totalPrice * (1 - downPaymentRate)
-				console.log('贷款总额：', totalLoan)
+
 
 				const months = this.loanYears[this.selectedYear] * 12
-				console.log('还款月数：', months)
+
 
 				let monthlyRate, loanAmount
 
 				if (this.currentType === 'commercial') {
 					monthlyRate = this.commercialRate / 12 / 100
 					loanAmount = totalLoan
-					console.log('商业贷款月利率：', monthlyRate)
+					
 				} else if (this.currentType === 'gjj') {
 					monthlyRate = this.gjjRate / 12 / 100
 					loanAmount = totalLoan
-					console.log('公积金月利率：', monthlyRate)
+					
 				} else {
 					// 组合贷款的计算逻辑
-					console.log('组合贷款计算开始')
+					
 					const commercialMonthlyRate = this.commercialRate / 12 / 100
 					const gjjMonthlyRate = this.gjjRate / 12 / 100
 					const commercialLoan = parseFloat(this.commercialAmount)
 					const gjjLoan = totalLoan - commercialLoan
 
-					console.log('组合贷款参数：', {
-						commercialMonthlyRate,
-						gjjMonthlyRate,
-						commercialLoan,
-						gjjLoan
-					})
+					
 
 					// 分别计算商贷和公积金的月供
 					this.calculateBothMethods(commercialLoan, commercialMonthlyRate, months)
@@ -211,21 +198,13 @@
 					return
 				}
 
-				console.log('开始计算还款方案，参数：', {
-					loanAmount,
-					monthlyRate,
-					months
-				})
+				
 
 				this.calculateBothMethods(loanAmount, monthlyRate, months)
 				this.showResult = true
 			},
 			calculateBothMethods(principal, monthlyRate, months) {
-				console.log('进入calculateBothMethods方法，参数：', {
-					principal,
-					monthlyRate,
-					months
-				})
+				
 
 				// 计算等额本息还款计划
 				const schedule = []

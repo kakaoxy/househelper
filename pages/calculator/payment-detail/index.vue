@@ -4,7 +4,12 @@
     <view class="summary-section" v-if="results">
       <!-- 主要信息卡片 -->
       <view class="main-card">
-        <text class="main-label">{{currentType === 'equal' ? '月还款金额' : '首期还款金额'}}</text>
+        <view class="card-header">
+          <text class="main-label">{{currentType === 'equal' ? '月还款金额' : '首期还款金额'}}</text>
+          <button class="share-btn" open-type="share">
+            <image src="/static/icons/share.png" class="share-icon"></image>
+          </button>
+        </view>
         <text class="main-value">{{currentType === 'equal' ? results.equalLoanPayment.monthlyPayment : results.equalPrincipalPayment.firstMonthPayment}}元</text>
         <view class="sub-info">
           <view class="sub-item">
@@ -97,7 +102,23 @@ export default {
   methods: {
     switchType(type) {
       this.currentType = type
-    }
+    },
+    onShareAppMessage() {
+      const paymentInfo = this.currentType === 'equal' ? 
+        `月供：${this.results.equalLoanPayment.monthlyPayment}元` : 
+        `首期还款：${this.results.equalPrincipalPayment.firstMonthPayment}元`;
+      
+      return {
+        title: `房贷还款计划：${paymentInfo}`,
+        path: '/pages/calculator/payment-detail/index?data=' + encodeURIComponent(JSON.stringify({
+          results: this.results,
+          loanAmount: this.loanAmount,
+          totalMonths: this.totalMonths,
+          equalSchedule: this.equalSchedule,
+          principalSchedule: this.principalSchedule
+        }))
+      }
+    },
   }
 }
 </script>
@@ -122,8 +143,39 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
 }
 
+.card-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.share-btn {
+  position: absolute;
+  top: 32rpx;
+  right: 32rpx;
+  background: transparent;
+  padding: 0;
+  border: none;
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.share-btn::after {
+  border: none;
+}
+
+.share-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
 .main-label {
   font-size: 28rpx;
   color: #8E8E93;
