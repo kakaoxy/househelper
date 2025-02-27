@@ -17,7 +17,13 @@
 			"style": {
 			  "navigationBarTitleText": "还款明细"
 			}
-		  }
+		},
+		{
+			"path": "pages/calendar/index",
+			"style": {
+			  "navigationBarTitleText": "成交日历"
+			}
+		}
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
