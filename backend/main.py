@@ -7,16 +7,15 @@ from api.v1.users import router as users_router
 from api.v1.roles import router as roles_router
 from api.v1.menus import router as menus_router
 from api.v1.apis import router as apis_router
-from core.config import settings
+from api.v1.house_transactions import router as house_transactions_router
+from core.database import Base, engine
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    description=settings.PROJECT_DESCRIPTION,
-    version=settings.PROJECT_VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
-)
+# 创建数据库表
+Base.metadata.create_all(bind=engine)
 
-# 设置CORS
+app = FastAPI()
+
+# 配置CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,11 +25,12 @@ app.add_middleware(
 )
 
 # 注册路由
-app.include_router(base_router, prefix=settings.API_V1_STR)
-app.include_router(users_router, prefix=settings.API_V1_STR)
-app.include_router(roles_router, prefix=settings.API_V1_STR)
-app.include_router(menus_router, prefix=settings.API_V1_STR)
-app.include_router(apis_router, prefix=settings.API_V1_STR)
+app.include_router(base_router, prefix="/api/v1")
+app.include_router(users_router, prefix="/api/v1")
+app.include_router(roles_router, prefix="/api/v1")
+app.include_router(menus_router, prefix="/api/v1")
+app.include_router(apis_router, prefix="/api/v1")
+app.include_router(house_transactions_router, prefix="/api/v1")
 
 @app.get("/")
 async def root():
