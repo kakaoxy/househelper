@@ -48,7 +48,8 @@ def client(test_db):
             db.close()
     
     app.dependency_overrides[get_db] = override_get_db
-    yield TestClient(app)
+    client = TestClient(app)
+    yield client
     app.dependency_overrides = {}
 
 def test_create_house_transaction(client):
