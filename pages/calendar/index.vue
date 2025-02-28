@@ -6,6 +6,9 @@
         <view class="month-switcher">
           <text @click="changeMonth(-1)" class="switcher-btn">上个月</text>
           <text @click="changeMonth(1)" class="switcher-btn">下个月</text>
+          <button class="share-btn" open-type="share">
+            <image src="/static/icons/share.png" class="share-icon"></image>
+          </button>
         </view>
       </view>
       <view class="weekdays">
@@ -20,6 +23,18 @@
             <text :class="['second-hand', getTrendClass(day.deals.trend)]" v-if="showSecondHand && currentType !== 'all'">{{ day.deals.secondHand }}</text>
           </view>
         </view>
+      </view>
+    </view>
+    
+    <!-- 月度统计信息 -->
+    <view class="monthly-stats">
+      <view class="stat-item">
+        <text>本月新房累计：{{ monthlyStats.newHouse }}套，</text>
+        <text :class="['trend', monthlyStats.newHouseTrend > 0 ? 'up' : monthlyStats.newHouseTrend < 0 ? 'down' : 'same']">环比上月同期{{ monthlyStats.newHouseTrend > 0 ? '上涨' : '下降' }}{{ Math.abs(monthlyStats.newHouseTrend) }}%</text>
+      </view>
+      <view class="stat-item">
+        <text>本月二手累计：{{ monthlyStats.secondHand }}套，</text>
+        <text :class="['trend', monthlyStats.secondHandTrend > 0 ? 'up' : monthlyStats.secondHandTrend < 0 ? 'down' : 'same']">环比上月同期{{ monthlyStats.secondHandTrend > 0 ? '上涨' : '下降' }}{{ Math.abs(monthlyStats.secondHandTrend) }}%</text>
       </view>
     </view>
     
@@ -56,7 +71,13 @@ export default {
       calendarDays: [],
       newHouseDeals: [], // 新房成交量数据
       secondHandDeals: [], // 二手房成交量数据
-      currentType: 'all' // 当前选中的类型：all/new/second
+      currentType: 'all', // 当前选中的类型：all/new/second
+      monthlyStats: {
+        newHouse: 0,
+        secondHand: 0,
+        newHouseTrend: 0,
+        secondHandTrend: 0
+      }
     }
   },
   computed: {
@@ -69,6 +90,12 @@ export default {
   },
   created() {
     this.fetchHouseDeals()
+  },
+  onShareAppMessage() {
+    return {
+      title: `${this.currentYear}年${this.currentMonth + 1}月房产成交数据`,
+      path: '/pages/calendar/index'
+    }
   },
   methods: {
     async fetchHouseDeals() {
@@ -103,6 +130,9 @@ export default {
           // 填充数据
           this.newHouseDeals = deals.map(deal => deal ? deal.newHouse : 0)
           this.secondHandDeals = deals.map(deal => deal ? deal.secondHand : 0)
+          
+          // 计算月度统计数据
+          this.calculateMonthlyStats()
           
           // 重新生成日历数据
           this.generateCalendarDays()
@@ -261,7 +291,55 @@ export default {
       this.newHouseDeals = Array.from({length: 60}, () => Math.floor(Math.random() * 1000) + 100);
       this.secondHandDeals = Array.from({length: 60}, () => Math.floor(Math.random() * 1500) + 200);
       this.generateCalendarDays();
-    }
+    },
+    calculateMonthlyStats() {
+      const today = new Date()
+      const currentMonthStart = new Date(this.currentYear, this.currentMonth, 1)
+      const lastMonthStart = new Date(this.currentYear, this.currentMonth - 1, 1)
+      
+      // 计算当月累计成交量
+      let currentMonthNewHouse = 0
+      let currentMonthSecondHand = 0
+      let lastMonthNewHouse = 0
+      let lastMonthSecondHand = 0
+      
+      const currentMonthDays = Math.min(
+        today.getDate(),
+        new Date(this.currentYear, this.currentMonth + 1, 0).getDate()
+      )
+      
+      for (let i = 0; i < currentMonthDays; i++) {
+        const date = new Date(this.currentYear, this.currentMonth, i + 1)
+        const startOfYear = new Date(date.getFullYear(), 0, 1)
+        const dayIndex = Math.floor((date - startOfYear) / (24 * 60 * 60 * 1000))
+        
+        if (dayIndex < this.newHouseDeals.length) {
+          currentMonthNewHouse += this.newHouseDeals[dayIndex]
+          currentMonthSecondHand += this.secondHandDeals[dayIndex]
+        }
+        
+        // 计算上月同期数据
+        const lastMonthDate = new Date(this.currentYear, this.currentMonth - 1, i + 1)
+        const lastMonthStartOfYear = new Date(lastMonthDate.getFullYear(), 0, 1)
+        const lastMonthDayIndex = Math.floor((lastMonthDate - lastMonthStartOfYear) / (24 * 60 * 60 * 1000))
+        
+        if (lastMonthDayIndex >= 0 && lastMonthDayIndex < this.newHouseDeals.length) {
+          lastMonthNewHouse += this.newHouseDeals[lastMonthDayIndex]
+          lastMonthSecondHand += this.secondHandDeals[lastMonthDayIndex]
+        }
+      }
+      
+      // 计算环比变化百分比
+      const newHouseTrend = lastMonthNewHouse === 0 ? 0 : Math.round((currentMonthNewHouse - lastMonthNewHouse) / lastMonthNewHouse * 100)
+      const secondHandTrend = lastMonthSecondHand === 0 ? 0 : Math.round((currentMonthSecondHand - lastMonthSecondHand) / lastMonthSecondHand * 100)
+      
+      this.monthlyStats = {
+        newHouse: currentMonthNewHouse,
+        secondHand: currentMonthSecondHand,
+        newHouseTrend: newHouseTrend,
+        secondHandTrend: secondHandTrend
+      }
+    },
   }
 }
 </script>
@@ -297,6 +375,28 @@ export default {
 .month-switcher {
   display: flex;
   gap: 16rpx;
+  align-items: center;
+}
+
+.share-btn {
+  background: transparent;
+  padding: 0;
+  border: none;
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8rpx;
+}
+
+.share-btn::after {
+  border: none;
+}
+
+.share-icon {
+  width: 40rpx;
+  height: 40rpx;
 }
 
 .switcher-btn {
@@ -456,5 +556,39 @@ export default {
 .test-button:active {
   opacity: 0.8;
   transform: translateX(-50%) scale(0.98);
+}
+.monthly-stats {
+  margin-top: 32rpx;
+  padding: 32rpx;
+  background-color: #FFFFFF;
+  border-radius: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.stat-item {
+  margin-bottom: 16rpx;
+  font-size: 28rpx;
+  color: #1C1C1E;
+  line-height: 1.5;
+}
+
+.stat-item:last-child {
+  margin-bottom: 0;
+}
+
+.trend {
+  font-weight: 500;
+}
+
+.trend.up {
+  color: #FF3B30;
+}
+
+.trend.down {
+  color: #34C759;
+}
+
+.trend.same {
+  color: #8E8E93;
 }
 </style>
