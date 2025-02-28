@@ -13,14 +13,14 @@
 		</view>
 
 		<!-- 手机号授权弹窗 -->
-		<view class="auth-modal" v-if="showAuthModal">
+		<!-- <view class="auth-modal" v-if="showAuthModal">
 			<view class="auth-content">
 				<view class="auth-title">需要授权</view>
 				<view class="auth-desc">查看成交日历需要授权手机号</view>
 				<button class="auth-btn" open-type="getPhoneNumber" @getphonenumber="handleGetPhoneNumber">授权手机号</button>
 				<view class="auth-cancel" @tap="cancelAuth">取消</view>
 			</view>
-		</view>
+		</view> -->
 	</view>
 </template>
 
@@ -47,7 +47,7 @@ export default {
 	methods: {
 		async handleClick(path) {
 			// 检查是否是成交日历页面
-			if (path === '/pages/calendar/index') {
+			/* if (path === '/pages/calendar/index') {
 				// 检查是否已授权手机号
 				try {
 					const phoneNumber = uni.getStorageSync('userPhoneNumber')
@@ -60,7 +60,7 @@ export default {
 				} catch (e) {
 					console.error('获取授权状态失败:', e)
 				}
-			}
+			} */
 			
 			// 正常导航
 			uni.navigateTo({

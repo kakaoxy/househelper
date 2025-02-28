@@ -46,6 +46,7 @@ if __name__ == "__main__":
     logger.info("正在启动HouseHelper API服务...")
     logger.info(f"服务器将运行在 http://0.0.0.0:8000")
     
+    
     # 配置uvicorn使用自定义日志系统
     uvicorn.run(
         "main:app",

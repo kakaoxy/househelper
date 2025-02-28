@@ -41,12 +41,12 @@
         @tap="switchType('second')"
       >二手房</view>
     </view>
-    <!-- 测试按钮 -->
-    <view class="test-button" @tap="generateTestData">生成测试数据</view>
   </view>
 </template>
 
 <script>
+import { API_CONFIG, request } from '@/api/config.js';
+
 export default {
   data() {
     return {
@@ -68,9 +68,68 @@ export default {
     }
   },
   created() {
-    this.generateCalendarDays()
+    this.fetchHouseDeals()
   },
   methods: {
+    async fetchHouseDeals() {
+      try {
+        const response = await request({
+          endpoint: API_CONFIG.ENDPOINTS.HOUSE_TRANSACTIONS,
+          method: 'GET'
+        })
+        
+        if (!response || !response.statusCode) {
+          throw new Error('API响应异常：未获取到有效的状态码');
+        }
+
+        if (response.statusCode === 200) {
+          const data = response.data
+          // 将数据转换为按日期排序的数组
+          const deals = new Array(60).fill(null)
+          
+          data.items.forEach(item => {
+            const date = new Date(item.transaction_date)
+            const startOfYear = new Date(date.getFullYear(), 0, 1)
+            const dayIndex = Math.floor((date - startOfYear) / (24 * 60 * 60 * 1000))
+            
+            if (dayIndex < 60) {
+              deals[dayIndex] = {
+                newHouse: item.new_house_count,
+                secondHand: item.second_hand_count
+              }
+            }
+          })
+          
+          // 填充数据
+          this.newHouseDeals = deals.map(deal => deal ? deal.newHouse : 0)
+          this.secondHandDeals = deals.map(deal => deal ? deal.secondHand : 0)
+          
+          // 重新生成日历数据
+          this.generateCalendarDays()
+        } else if (response.statusCode === 502) {
+          console.error('后端服务器错误(502)，请检查服务器是否正常运行');
+          uni.showToast({
+            title: '服务器暂时不可用，请稍后再试',
+            icon: 'none',
+            duration: 2000
+          });
+        } else {
+          console.error('API请求失败，状态码:', response.statusCode);
+          uni.showToast({
+            title: '数据加载失败，请重试',
+            icon: 'none',
+            duration: 2000
+          });
+        }
+      } catch (error) {
+        console.error('获取房产成交数据失败:', error)
+        uni.showToast({
+          title: '网络连接失败，请检查网络设置',
+          icon: 'none',
+          duration: 2000
+        });
+      }
+    },
     generateCalendarDays() {
       const firstDay = new Date(this.currentYear, this.currentMonth, 1)
       const lastDay = new Date(this.currentYear, this.currentMonth + 1, 0)
@@ -183,7 +242,7 @@ export default {
       } else {
         this.currentMonth = newMonth
       }
-      this.generateCalendarDays()
+      this.fetchHouseDeals()
     },
     switchType(type) {
       this.currentType = type
