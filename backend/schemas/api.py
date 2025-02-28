@@ -27,7 +27,7 @@ class APIResponse(APIBase):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # API列表响应模式
 class APIListResponse(BaseModel):
@@ -35,4 +35,4 @@ class APIListResponse(BaseModel):
     items: List[APIResponse]
 
     class Config:
-        orm_mode = True
+        from_attributes = True

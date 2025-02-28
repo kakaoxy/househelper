@@ -23,7 +23,7 @@ class RoleResponse(RoleBase):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # 角色详细响应模式（包含关联的菜单和API权限）
 class RoleDetailResponse(RoleResponse):

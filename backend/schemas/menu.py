@@ -33,7 +33,7 @@ class MenuResponse(MenuBase):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # 菜单树形结构响应模式
 class MenuTreeResponse(MenuResponse):
