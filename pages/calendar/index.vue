@@ -139,17 +139,29 @@ export default {
       const newHouse = this.newHouseDeals[dayIndex];
       const secondHand = this.secondHandDeals[dayIndex];
       
-      // 计算趋势
-      const prevDayIndex = dayIndex - 1;
+      // 计算趋势 - 与上周同一天对比
+      // 一周是7天，所以上周同一天的索引是当前索引减7
+      const lastWeekDayIndex = dayIndex - 7;
       let trend = 'same';
       
-      if (prevDayIndex >= 0) {
-        const prevTotal = this.newHouseDeals[prevDayIndex] + this.secondHandDeals[prevDayIndex];
-        const currentTotal = newHouse + secondHand;
+      if (lastWeekDayIndex >= 0) {
+        // 根据当前选择的类型计算趋势
+        let currentValue, lastWeekValue;
         
-        if (currentTotal > prevTotal) {
+        if (this.currentType === 'all') {
+          currentValue = newHouse + secondHand;
+          lastWeekValue = this.newHouseDeals[lastWeekDayIndex] + this.secondHandDeals[lastWeekDayIndex];
+        } else if (this.currentType === 'new') {
+          currentValue = newHouse;
+          lastWeekValue = this.newHouseDeals[lastWeekDayIndex];
+        } else { // second
+          currentValue = secondHand;
+          lastWeekValue = this.secondHandDeals[lastWeekDayIndex];
+        }
+        
+        if (currentValue > lastWeekValue) {
           trend = 'up';
-        } else if (currentTotal < prevTotal) {
+        } else if (currentValue < lastWeekValue) {
           trend = 'down';
         }
       }
@@ -175,6 +187,8 @@ export default {
     },
     switchType(type) {
       this.currentType = type
+      // 切换类型后重新生成日历数据，以更新趋势颜色
+      this.generateCalendarDays()
     },
     getTrendClass(trend) {
       switch(trend) {
@@ -267,11 +281,13 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16rpx;
+  padding: 16rpx 8rpx;
   text-align: center;
   border: none;
   border-bottom: 1rpx solid #E5E5EA;
   transition: all 0.2s ease;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .day:active {
@@ -296,6 +312,8 @@ export default {
   flex-direction: column;
   gap: 4rpx;
   justify-content: center;
+  width: 100%;
+  align-items: center;
 }
 
 .new-house,
@@ -304,6 +322,11 @@ export default {
   padding: 4rpx;
   border-radius: 4rpx;
   display: inline-block;
+  min-width: 40rpx;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .new-house {
