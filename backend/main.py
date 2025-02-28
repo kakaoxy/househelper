@@ -10,6 +10,7 @@ from api.v1.apis import router as apis_router
 from api.v1.house_transactions import router as house_transactions_router
 from core.database import Base, engine
 from core.logging import LoggingMiddleware, logger
+from models.house_transaction import HouseTransaction  # 导入HouseTransaction模型
 
 # 创建数据库表
 Base.metadata.create_all(bind=engine)
@@ -41,12 +42,18 @@ async def root():
     return {"message": "欢迎使用HouseHelper API服务"}
 
 if __name__ == "__main__":
+    # 添加启动日志
+    logger.info("正在启动HouseHelper API服务...")
+    logger.info(f"服务器将运行在 http://0.0.0.0:8000")
+    
+    # 配置uvicorn使用自定义日志系统
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=8000,
         reload=True,
-        access_log=True,
+        access_log=False,  # 禁用uvicorn的访问日志，使用我们自定义的日志中间件
         log_level="info",
-        log_config=None  # 使用默认日志配置
+        log_config=None,  # 禁用uvicorn的默认日志配置
+        use_colors=True  # 启用控制台颜色输出
     )

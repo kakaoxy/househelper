@@ -16,12 +16,11 @@ def setup_logger():
     logger.add(
         sys.stdout,
         level=settings.LOG_LEVEL,
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}:{function}:{line}</cyan> - {message}",
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | {message}",
         colorize=True,
         backtrace=True,
         diagnose=True,
-        enqueue=True,
-        filter=lambda record: True  # 确保所有日志都输出到控制台
+        enqueue=True
     )
     
     # 确保日志目录存在
@@ -34,9 +33,8 @@ def setup_logger():
         rotation="100 MB",  # 当日志文件达到100MB时轮转
         retention="30 days",  # 保留30天的日志
         level=settings.LOG_LEVEL,
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
-        encoding="utf-8",
-        filter=lambda record: True  # 确保所有日志都写入文件
+        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {message}",
+        encoding="utf-8"
     )
     
     return logger
@@ -52,16 +50,8 @@ class LoggingMiddleware:
         
         # 记录请求信息
         if scope["type"] == "http":
-            # 获取请求头信息
-            headers = dict(scope["headers"])
-            user_agent = headers.get(b"user-agent", b"").decode()
-            content_type = headers.get(b"content-type", b"").decode()
-            
             logger.info(
-                f"[REQUEST] | {scope['method']} {scope['path']} | "
-                f"Client: {scope['client'][0]} | "
-                f"Content-Type: {content_type} | "
-                f"User-Agent: {user_agent}"
+                f"[REQUEST] {scope['method']} {scope['path']}"
             )
 
         # 处理请求
@@ -73,9 +63,9 @@ class LoggingMiddleware:
                 # 记录响应信息
                 if scope["type"] == "http":
                     logger.info(
-                        f"[RESPONSE] | {scope['method']} {scope['path']} | "
+                        f"[RESPONSE] {scope['method']} {scope['path']} | "
                         f"Status: {message['status']} | "
-                        f"处理时间: {process_time:.2f}ms"
+                        f"Time: {process_time:.2f}ms"
                     )
             
             await send(message)
