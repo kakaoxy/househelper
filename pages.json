@@ -23,6 +23,12 @@
 			"style": {
 			  "navigationBarTitleText": "成交日历"
 			}
+		},
+		{
+			"path": "pages/map/index",
+			"style": {
+			  "navigationBarTitleText": "选房地图"
+			}
 		}
 	],
 	"globalStyle": {

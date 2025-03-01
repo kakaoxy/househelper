@@ -38,6 +38,11 @@ export default {
 					name: '成交日历',
 					icon: '/static/icons/calendar.png',
 					path: '/pages/calendar/index'
+				},
+				{
+					name: '选房地图',
+					icon: '/static/icons/map.png',
+					path: '/pages/map/index'
 				}
 			],
 			showAuthModal: false,
