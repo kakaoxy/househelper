@@ -49,6 +49,7 @@
 <script>
 // import areaData from '@/static/data/areas.js'
 import { checkLogin, isLoggedIn, getToken } from '@/utils/auth.js';
+import { request } from '@/api/config.js';
 
 export default {
   data() {
@@ -77,16 +78,11 @@ export default {
         return;
       }
       
-      // 获取token用于请求头
-      const token = getToken();
       try {
-        // 修改请求URL，移除文件扩展名
-        const response = await uni.request({
-          url: 'http://localhost:8000/api/v1/geojson/hangzhoushangquan.geojson',
-          method: 'GET',
-          header: {
-            'Authorization': `Bearer ${token}`
-          }
+        // 使用API配置中的request函数，自动携带token
+        const response = await request({
+          endpoint: '/geojson/hangzhoushangquan.geojson',
+          method: 'GET'
         });
         
         if (response.statusCode === 200) {
