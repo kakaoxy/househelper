@@ -5,6 +5,7 @@ import uvicorn
 from api.v1 import api_router
 from core.database import Base, engine
 from core.logging import LoggingMiddleware, logger
+from core.auth import JWTAuthMiddleware  # 导入JWT验证中间件
 from models.house_transaction import HouseTransaction  # 导入HouseTransaction模型
 from models.geojson import GeoJsonData  # 添加新的模型
 
@@ -21,6 +22,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 添加JWT验证中间件
+app.add_middleware(JWTAuthMiddleware)
 
 # 添加日志中间件
 app.add_middleware(LoggingMiddleware)

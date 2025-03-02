@@ -61,6 +61,7 @@
 
 <script>
 import { API_CONFIG, request } from '@/api/config.js';
+import { checkLogin, isLoggedIn, getToken } from '@/utils/auth.js';
 
 export default {
   data() {
@@ -89,7 +90,10 @@ export default {
     }
   },
   created() {
-    this.fetchHouseDeals()
+    // 检查用户是否已登录，如果未登录则引导登录
+    checkLogin(() => {
+      this.fetchHouseDeals()
+    })
   },
   onShareAppMessage() {
     return {
@@ -99,6 +103,13 @@ export default {
   },
   methods: {
     async fetchHouseDeals() {
+      // 如果未登录，不执行数据获取
+      if (!isLoggedIn()) {
+        return;
+      }
+      
+      // 获取token用于请求头
+      const token = getToken();
       try {
         const response = await request({
           endpoint: API_CONFIG.ENDPOINTS.HOUSE_TRANSACTIONS,

@@ -48,6 +48,7 @@
 
 <script>
 // import areaData from '@/static/data/areas.js'
+import { checkLogin, isLoggedIn, getToken } from '@/utils/auth.js';
 
 export default {
   data() {
@@ -64,15 +65,28 @@ export default {
     }
   },
   onLoad() {
-    this.loadGeoJson()
+    // 检查用户是否已登录，如果未登录则引导登录
+    checkLogin(() => {
+      this.loadGeoJson()
+    })
   },
   methods: {
     async loadGeoJson() {
+      // 如果未登录，不执行数据获取
+      if (!isLoggedIn()) {
+        return;
+      }
+      
+      // 获取token用于请求头
+      const token = getToken();
       try {
         // 修改请求URL，移除文件扩展名
         const response = await uni.request({
           url: 'http://localhost:8000/api/v1/geojson/hangzhoushangquan.geojson',
-          method: 'GET'
+          method: 'GET',
+          header: {
+            'Authorization': `Bearer ${token}`
+          }
         });
         
         if (response.statusCode === 200) {

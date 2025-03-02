@@ -5,11 +5,15 @@ from typing import List, Optional
 import jwt
 from datetime import datetime, timedelta
 import bcrypt
+from wechatpy.client import WeChatClient
+from wechatpy.exceptions import WeChatClientException
 
 from core.database import get_db
 from core.config import settings
 from models.base import User
 from schemas.user import UserCreate, UserUpdate, UserResponse, Token, UserLogin
+from schemas.wechat import WechatLogin, WechatUserCreate
+from core.logging import logger
 
 router = APIRouter(prefix="/users", tags=["users"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/users/login")
@@ -102,6 +106,91 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         data={"sub": user.username, "user_id": user.id}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+# 微信登录
+@router.post("/wxlogin", response_model=Token)
+async def wechat_login(
+    wechat_data: WechatLogin,
+    db: Session = Depends(get_db)
+):
+    # 检查微信配置是否有效
+    logger.info(f"微信登录请求开始处理，接收到的数据: {wechat_data}")
+    if not settings.WECHAT_APPID or settings.WECHAT_APPID == "your_appid_here" or \
+       not settings.WECHAT_SECRET or settings.WECHAT_SECRET == "your_secret_here":
+        logger.error("微信小程序配置无效，WECHAT_APPID或WECHAT_SECRET未正确设置")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="微信小程序配置无效，请检查WECHAT_APPID和WECHAT_SECRET环境变量"
+        )
+        
+    try:
+        # 1. 获取session_key和openid
+        logger.info(f"开始调用微信API获取session_key和openid，code: {wechat_data.code}")
+        client = WeChatClient(settings.WECHAT_APPID, settings.WECHAT_SECRET)
+        session_info = client.wxa.code_to_session(wechat_data.code)
+        logger.info(f"微信API返回session信息: {session_info}")
+        
+        # 2. 解密手机号（如果提供了加密数据）
+        phone_info = None
+        if wechat_data.encrypted_data and wechat_data.iv:
+            logger.info("尝试解密手机号信息")
+            try:
+                phone_info = client.wxa.decrypt_encrypted_data(
+                    session_info['session_key'],
+                    wechat_data.encrypted_data,
+                    wechat_data.iv
+                )
+                logger.info(f"手机号解密成功: {phone_info}")
+            except Exception as e:
+                # 解密失败不阻止登录流程，但记录错误
+                logger.error(f"手机号解密失败: {str(e)}")
+        
+        # 3. 创建/更新用户
+        user = db.query(User).filter(User.openid == session_info['openid']).first()
+        if not user:
+            # 创建新用户
+            logger.info(f"未找到现有用户，创建新用户，openid: {session_info['openid']}")
+            user = User(
+                openid=session_info['openid'],
+                session_key=session_info['session_key'],
+                phone=phone_info['purePhoneNumber'] if phone_info else None,
+                wechat_nickname=wechat_data.user_info.get('nickName') if wechat_data.user_info else None
+            )
+            db.add(user)
+        else:
+            # 更新现有用户
+            logger.info(f"找到现有用户，更新用户信息，用户ID: {user.id}")
+            user.session_key = session_info['session_key']
+            if phone_info:
+                user.phone = phone_info['purePhoneNumber']
+            if wechat_data.user_info and wechat_data.user_info.get('nickName'):
+                user.wechat_nickname = wechat_data.user_info.get('nickName')
+        
+        db.commit()
+        db.refresh(user)
+        logger.info(f"用户数据保存成功，用户ID: {user.id}")
+        
+        # 4. 生成令牌
+        access_token = create_access_token(
+            data={"sub": user.openid, "user_id": user.id}
+        )
+        logger.info("令牌生成成功，登录完成")
+        
+        return {"access_token": access_token, "token_type": "bearer"}
+    except WeChatClientException as e:
+        logger.error(f"微信API调用失败: {str(e)}，错误详情: {e.__dict__}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"微信API调用失败: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"微信登录过程中发生异常: {str(e)}，异常类型: {type(e).__name__}")
+        import traceback
+        logger.error(f"异常堆栈: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"微信登录失败: {str(e)}"
+        )
 
 # 获取当前用户信息
 @router.get("/me", response_model=UserResponse)

@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     # CORS配置
     CORS_ORIGINS: List[str] = ["*"]
     
+    # 微信小程序配置
+    WECHAT_APPID: str = os.getenv("WECHAT_APPID", "")
+    WECHAT_SECRET: str = os.getenv("WECHAT_SECRET", "")
+    
     # 日志配置
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = f"{BASE_DIR}/log/app.log"
